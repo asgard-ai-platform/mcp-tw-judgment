@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "{service}": {
+      "command": "python",
+      "args": ["mcp_server.py"],
+      "cwd": "${PWD}",
+      "env": {
+        "PYTHONPATH": "${PWD}",
+        "SERVICE_API_TOKEN": "${SERVICE_API_TOKEN}"
+      }
+    }
+  }
+}
