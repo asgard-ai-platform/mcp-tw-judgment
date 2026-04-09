@@ -17,15 +17,18 @@ A reusable template for building [Model Context Protocol (MCP)](https://modelcon
 
 1. Click **"Use this template"** on GitHub (or fork this repo)
 2. Rename to `mcp-{your-service}` (e.g., `mcp-ecpay`)
-3. **Choose your connector** — keep the one you need in `connectors/`, delete the rest
-4. **Choose your auth** — keep the one you need in `auth/`, delete the rest
-5. **Configure** — update `config/settings.py` with your API endpoints
-6. **Build tools** — replace `tools/sample_tools.py` with your real tools
-7. **Update metadata** — `pyproject.toml`, `.mcp.json`, `.env.example`, READMEs
+3. Run init script (see below)
+4. **Choose your connector** — keep the one you need in `connectors/`, delete the rest
+5. **Choose your auth** — keep the one you need in `auth/`, delete the rest
+6. **Configure** — update `config/settings.py` with your API endpoints
+7. **Build tools** — replace `tools/sample_tools.py` with your real tools
 
 ## Quick Start
 
 ```bash
+# Initialize project (replaces {service} placeholders)
+uv run --no-project python scripts/init.py
+
 # Setup
 uv sync
 

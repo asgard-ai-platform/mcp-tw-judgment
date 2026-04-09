@@ -5,6 +5,9 @@ This is a template for building MCP (Model Context Protocol) servers that expose
 
 ## Setup
 ```bash
+# Initialize project (replaces {service} placeholders)
+uv run --no-project python scripts/init.py
+
 uv sync
 ```
 

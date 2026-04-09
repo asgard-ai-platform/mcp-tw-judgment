@@ -17,15 +17,18 @@
 
 1. 在 GitHub 上點擊 **「Use this template」**（或 Fork 此 Repo）
 2. 重新命名為 `mcp-{你的服務}` （例如 `mcp-ecpay`）
-3. **選擇連接器** — 保留 `connectors/` 中需要的，刪除其餘
-4. **選擇認證** — 保留 `auth/` 中需要的，刪除其餘
-5. **設定** — 更新 `config/settings.py` 的 API 端點
-6. **建構工具** — 用你的實際工具替換 `tools/sample_tools.py`
-7. **更新元資料** — `pyproject.toml`、`.mcp.json`、`.env.example`、README
+3. 透過 init script 初始化 
+4. **選擇連接器** — 保留 `connectors/` 中需要的，刪除其餘
+5. **選擇認證** — 保留 `auth/` 中需要的，刪除其餘
+6. **設定** — 更新 `config/settings.py` 的 API 端點
+7. **建構工具** — 用你的實際工具替換 `tools/sample_tools.py`
 
 ## 快速開始
 
 ```bash
+# 初始化專案（替換 {service} 佔位符）
+uv run --no-project python scripts/init.py
+
 # 環境設定
 uv sync
 
