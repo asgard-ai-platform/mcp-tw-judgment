@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=68.0"]
-build-backend = "setuptools.backends._legacy:_Backend"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 # TODO: Replace {service} with your service name (e.g., "mcp-ecpay")
@@ -37,8 +37,9 @@ dependencies = [
 # TODO: Replace {service} with your service name
 mcp-service = "mcp_server:main"
 
-[tool.setuptools]
-py-modules = ["mcp_server", "app"]
+[tool.hatch.build.targets.wheel]
+packages = ["config", "connectors", "auth", "tools"]
 
-[tool.setuptools.packages.find]
-include = ["config*", "connectors*", "auth*", "tools*"]
+[tool.hatch.build.targets.wheel.force-include]
+"app.py" = "app.py"
+"mcp_server.py" = "mcp_server.py"
