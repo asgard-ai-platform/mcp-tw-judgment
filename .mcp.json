@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "{service}": {
-      "command": "python",
-      "args": ["mcp_server.py"],
+      "command": "uv",
+      "args": ["run", "mcp-service"],
       "cwd": "${PWD}",
       "env": {
         "PYTHONPATH": "${PWD}",
