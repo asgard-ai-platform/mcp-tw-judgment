@@ -2,8 +2,6 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
 # Import tool modules to trigger @mcp.tool() decorator registration.
 # TODO: Replace with your actual tool module imports.
 import tools.sample_tools  # noqa: F401
