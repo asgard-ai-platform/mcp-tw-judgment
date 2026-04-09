@@ -27,18 +27,17 @@
 
 ```bash
 # 環境設定
-uv venv && source .venv/bin/activate
-uv pip install -e .
+uv sync
 
 # 設定認證
 cp .env.example .env
 # 編輯 .env 填入你的 API 認證資訊
 
 # 測試連線
-python scripts/auth/test_connection.py
+uv run --env-file .env python scripts/auth/test_connection.py
 
 # 啟動伺服器
-python mcp_server.py
+uv run --env-file .env python mcp_server.py
 ```
 
 ## 專案結構
@@ -102,8 +101,8 @@ def get_order(
 ## 測試
 
 ```bash
-python scripts/auth/test_connection.py   # 驗證認證資訊
-python tests/test_all_tools.py           # 執行所有工具 E2E 測試
+uv run python scripts/auth/test_connection.py   # 驗證認證資訊
+uv run python tests/test_all_tools.py           # 執行所有工具 E2E 測試
 ```
 
 ## 授權

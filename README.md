@@ -27,18 +27,17 @@ A reusable template for building [Model Context Protocol (MCP)](https://modelcon
 
 ```bash
 # Setup
-uv venv && source .venv/bin/activate
-uv pip install -e .
+uv sync
 
 # Configure credentials
 cp .env.example .env
 # Edit .env with your API credentials
 
 # Test connection
-python scripts/auth/test_connection.py
+uv run --env-file .env python scripts/auth/test_connection.py
 
 # Run server
-python mcp_server.py
+uv run --env-file .env python mcp_server.py
 ```
 
 ## Project Structure
@@ -102,8 +101,8 @@ def get_order(
 ## Testing
 
 ```bash
-python scripts/auth/test_connection.py   # Validate credentials
-python tests/test_all_tools.py           # Run all tool E2E tests
+uv run python scripts/auth/test_connection.py   # Validate credentials
+uv run python tests/test_all_tools.py           # Run all tool E2E tests
 ```
 
 ## License
