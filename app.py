@@ -1,4 +1,4 @@
-from mcp.server.mcpserver import MCPServer
+from mcp.server.fastmcp import FastMCP
 
 # TODO: Replace "mcp-{service}" with your service name (e.g., "mcp-ecpay")
-mcp = MCPServer("mcp-{service}", version="0.1.0")
+mcp = FastMCP("mcp-{service}")
