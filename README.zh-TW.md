@@ -17,28 +17,30 @@
 
 1. 在 GitHub 上點擊 **「Use this template」**（或 Fork 此 Repo）
 2. 重新命名為 `mcp-{你的服務}` （例如 `mcp-ecpay`）
-3. **選擇連接器** — 保留 `connectors/` 中需要的，刪除其餘
-4. **選擇認證** — 保留 `auth/` 中需要的，刪除其餘
-5. **設定** — 更新 `config/settings.py` 的 API 端點
-6. **建構工具** — 用你的實際工具替換 `tools/sample_tools.py`
-7. **更新元資料** — `pyproject.toml`、`.mcp.json`、`.env.example`、README
+3. 透過 init script 初始化 
+4. **選擇連接器** — 保留 `connectors/` 中需要的，刪除其餘
+5. **選擇認證** — 保留 `auth/` 中需要的，刪除其餘
+6. **設定** — 更新 `config/settings.py` 的 API 端點
+7. **建構工具** — 用你的實際工具替換 `tools/sample_tools.py`
 
 ## 快速開始
 
 ```bash
+# 初始化專案（替換 {service} 佔位符）
+uv run --no-project python scripts/init.py
+
 # 環境設定
-uv venv && source .venv/bin/activate
-uv pip install -e .
+uv sync
 
 # 設定認證
 cp .env.example .env
 # 編輯 .env 填入你的 API 認證資訊
 
 # 測試連線
-python scripts/auth/test_connection.py
+uv run --env-file .env python scripts/auth/test_connection.py
 
 # 啟動伺服器
-python mcp_server.py
+uv run --env-file .env python mcp_server.py
 ```
 
 ## 專案結構
@@ -102,8 +104,8 @@ def get_order(
 ## 測試
 
 ```bash
-python scripts/auth/test_connection.py   # 驗證認證資訊
-python tests/test_all_tools.py           # 執行所有工具 E2E 測試
+uv run python scripts/auth/test_connection.py   # 驗證認證資訊
+uv run python tests/test_all_tools.py           # 執行所有工具 E2E 測試
 ```
 
 ## 授權

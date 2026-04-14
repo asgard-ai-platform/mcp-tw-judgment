@@ -5,22 +5,24 @@ This is a template for building MCP (Model Context Protocol) servers that expose
 
 ## Setup
 ```bash
-uv venv && source .venv/bin/activate
-uv pip install -e .
+# Initialize project (replaces {service} placeholders)
+uv run --no-project python scripts/init.py
+
+uv sync
 ```
 
 ## Run
 ```bash
-python mcp_server.py
+uv run python mcp_server.py
 ```
 
 ## Test
 ```bash
 # Test connection
-python scripts/auth/test_connection.py
+uv run --env-file .env python scripts/auth/test_connection.py
 
 # Run all tool tests
-python tests/test_all_tools.py
+uv run --env-file .env python tests/test_all_tools.py
 ```
 
 ## Architecture
