@@ -3,10 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-# TODO: Replace {service} with your service name (e.g., "mcp-ecpay")
-name = "mcp-{service}"
+name = "mcp-tw-judgment"
 version = "0.1.0"
-description = "MCP Server for {Service Name} — AI-callable tools via Model Context Protocol"
+description = "MCP Server for Tw Judgment — AI-callable tools via Model Context Protocol"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
@@ -34,8 +33,7 @@ dependencies = [
 # ---------------------------------------------------------------------------
 
 [project.scripts]
-# TODO: Replace {service} with your service name
-mcp-service = "mcp_server:main"
+mcp-tw-judgment = "mcp_server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["config", "connectors", "auth", "tools"]

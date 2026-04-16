@@ -26,7 +26,7 @@ A reusable template for building [Model Context Protocol (MCP)](https://modelcon
 ## Quick Start
 
 ```bash
-# Initialize project (replaces {service} placeholders)
+# Initialize project (replaces tw-judgment placeholders)
 uv run --no-project python scripts/init.py
 
 # Setup
@@ -46,7 +46,7 @@ uv run --env-file .env python mcp_server.py
 ## Project Structure
 
 ```
-mcp-{service}/
+mcp-tw-judgment/
 ├── app.py                  # MCPServer singleton
 ├── mcp_server.py           # Entry point (stdio transport)
 ├── config/settings.py      # API endpoints, URL builder, auth delegation

@@ -26,7 +26,7 @@
 ## 快速開始
 
 ```bash
-# 初始化專案（替換 {service} 佔位符）
+# 初始化專案（替換 tw-judgment 佔位符）
 uv run --no-project python scripts/init.py
 
 # 環境設定
@@ -46,7 +46,7 @@ uv run --env-file .env python mcp_server.py
 ## 專案結構
 
 ```
-mcp-{service}/
+mcp-tw-judgment/
 ├── app.py                  # MCPServer 單例
 ├── mcp_server.py           # 入口（stdio 傳輸）
 ├── config/settings.py      # API 端點、URL 建構、認證委派

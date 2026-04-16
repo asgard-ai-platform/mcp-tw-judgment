@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "{service}": {
+    "tw-judgment": {
       "command": "uv",
-      "args": ["run", "mcp-service"],
+      "args": ["run", "mcp-tw-judgment"],
       "cwd": "${PWD}",
       "env": {
         "PYTHONPATH": "${PWD}",
