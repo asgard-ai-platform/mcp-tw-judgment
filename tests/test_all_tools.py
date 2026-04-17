@@ -1,99 +1,130 @@
-#!/usr/bin/env python3
-"""E2E test runner for all MCP tools.
+"""E2E tests for MCP judgment tools.
 
-Runs each tool with test parameters against the live API.
-Requires valid credentials in environment variables.
+Tests marked @live hit the live 司法院 API and are skipped by default.
+Set the environment variable to opt in:
 
-Usage:
-    python tests/test_all_tools.py
+    RUN_LIVE_TESTS=1 uv run python -m unittest tests.test_all_tools -v
+
+Tests without @live always run and only verify tool registration (no network).
 """
 
-import sys
-import os
 import asyncio
-import traceback
+import os
+import sys
+import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Import tool modules to trigger @mcp.tool() registration
-import tools.sample_tools  # noqa: F401
-
+import tools.judgment_tools  # noqa: F401 — side-effect: registers @mcp.tool()
 from app import mcp
 
 
-results = []
+# ---------------------------------------------------------------------------
+# Decorator
+# ---------------------------------------------------------------------------
 
+def live(fn):
+    """Mark a test as requiring live API access.
 
-def run_test(name: str, fn, **kwargs):
-    """Run a single tool test and record the result.
-
-    Args:
-        name: Display name for the test.
-        fn: Tool function to call.
-        **kwargs: Arguments to pass to the tool function.
+    Skipped unless RUN_LIVE_TESTS=1 is set in the environment.
     """
-    print(f"\n{'='*60}")
-    print(f"TEST: {name}")
-    print(f"{'='*60}")
-    try:
-        result = fn(**kwargs)
-        print(f"  PASS")
-        if isinstance(result, dict):
-            for key, value in result.items():
-                preview = str(value)
-                if len(preview) > 100:
-                    preview = preview[:100] + "..."
-                print(f"    {key}: {preview}")
-        results.append(("PASS", name))
-    except Exception as e:
-        print(f"  FAIL: {e}")
-        traceback.print_exc()
-        results.append(("FAIL", name))
+    return unittest.skipUnless(
+        os.environ.get("RUN_LIVE_TESTS"),
+        "live API test — set RUN_LIVE_TESTS=1 to run",
+    )(fn)
 
 
-def main():
-    # Verify tool count
-    tools_list = asyncio.run(mcp.list_tools())
-    print(f"Registered tools: {len(tools_list)}")
-    for tool in tools_list:
-        print(f"  - {tool.name}: {tool.description[:80] if tool.description else 'no description'}")
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
 
-    print(f"\n{'#'*60}")
-    print(f"RUNNING E2E TESTS")
-    print(f"{'#'*60}")
+class TestToolRegistration(unittest.TestCase):
+    """Verify tools are registered correctly — no network required."""
 
-    # =========================================================================
-    # TODO: Replace with your actual tool tests
-    # =========================================================================
+    def setUp(self):
+        self.tools = asyncio.run(mcp.list_tools())
+        self.tool_names = {t.name for t in self.tools}
 
-    # Test 1: get_item
-    # run_test("get_item", tools.sample_tools.get_item, item_id="test-123")
+    def test_expected_tools_registered(self):
+        self.assertIn("search_judgments", self.tool_names)
+        self.assertIn("get_judgment", self.tool_names)
 
-    # Test 2: list_items
-    # run_test("list_items", tools.sample_tools.list_items, limit=5)
+    def test_search_judgments_schema(self):
+        tool = next(t for t in self.tools if t.name == "search_judgments")
+        props = tool.inputSchema["properties"]
+        self.assertIn("keyword", props)
+        self.assertIn("page", props)
+        self.assertEqual(props["page"]["default"], 1)
 
-    # Test 3: get_item_summary
-    # run_test("get_item_summary", tools.sample_tools.get_item_summary, days=7)
+    def test_get_judgment_schema(self):
+        tool = next(t for t in self.tools if t.name == "get_judgment")
+        self.assertIn("judgment_id", tool.inputSchema["properties"])
+        self.assertIn("judgment_id", tool.inputSchema["required"])
 
-    # =========================================================================
-    # Summary
-    # =========================================================================
-    print(f"\n{'#'*60}")
-    print(f"TEST SUMMARY")
-    print(f"{'#'*60}")
 
-    passed = sum(1 for status, _ in results if status == "PASS")
-    failed = sum(1 for status, _ in results if status == "FAIL")
+class TestSearchJudgments(unittest.TestCase):
 
-    for status, name in results:
-        icon = "+" if status == "PASS" else "X"
-        print(f"  [{icon}] {name}")
+    @live
+    def test_returns_results_for_valid_keyword(self):
+        from tools.judgment_tools import search_judgments
+        result = search_judgments(keyword="著作權", page=1)
 
-    print(f"\nTotal: {len(results)} | Passed: {passed} | Failed: {failed}")
+        self.assertIn("total", result)
+        self.assertIn("results", result)
+        self.assertGreater(result["total"], 0)
+        self.assertEqual(len(result["results"]), 20)
 
-    if failed > 0:
-        sys.exit(1)
+    @live
+    def test_result_entry_has_required_fields(self):
+        from tools.judgment_tools import search_judgments
+        result = search_judgments(keyword="著作權", page=1)
+        entry = result["results"][0]
+
+        for field in ("judgment_id", "title", "date", "case_reason", "url", "summary"):
+            self.assertIn(field, entry, msg=f"Missing field: {field}")
+        self.assertTrue(entry["judgment_id"], "judgment_id should not be empty")
+
+    @live
+    def test_page_2_differs_from_page_1(self):
+        from tools.judgment_tools import search_judgments
+        page1 = search_judgments(keyword="著作權", page=1)
+        page2 = search_judgments(keyword="著作權", page=2)
+
+        ids1 = {e["judgment_id"] for e in page1["results"]}
+        ids2 = {e["judgment_id"] for e in page2["results"]}
+        self.assertTrue(ids1.isdisjoint(ids2), "Page 1 and page 2 should have different results")
+
+
+class TestGetJudgment(unittest.TestCase):
+
+    KNOWN_ID = "IPCV,114,民著訴,52,20260415,1"
+
+    @live
+    def test_returns_full_content(self):
+        from tools.judgment_tools import get_judgment
+        result = get_judgment(judgment_id=self.KNOWN_ID)
+
+        for field in ("title", "date", "case_reason", "content"):
+            self.assertIn(field, result)
+        self.assertGreater(len(result["content"]), 100)
+
+    @live
+    def test_content_contains_keyword(self):
+        from tools.judgment_tools import get_judgment
+        result = get_judgment(judgment_id=self.KNOWN_ID)
+        self.assertIn("著作權", result["content"])
+
+    @live
+    def test_search_then_get_roundtrip(self):
+        """Verify judgment_id from search can be passed to get_judgment."""
+        from tools.judgment_tools import get_judgment, search_judgments
+        search = search_judgments(keyword="著作權", page=1)
+        first_id = search["results"][0]["judgment_id"]
+
+        detail = get_judgment(judgment_id=first_id)
+        self.assertTrue(detail["title"])
+        self.assertTrue(detail["content"])
 
 
 if __name__ == "__main__":
-    main()
+    unittest.main(verbosity=2)
