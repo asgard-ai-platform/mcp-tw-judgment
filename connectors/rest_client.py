@@ -23,7 +23,8 @@ def api_request(
     path_params: dict | None = None,
     retries: int = 3,
     timeout: int = 60,
-) -> dict:
+    response_format: str = "json",
+) -> dict | str:
     """Make an HTTP request with exponential backoff retry.
 
     Args:
@@ -34,9 +35,11 @@ def api_request(
         path_params: Path parameters for URL substitution.
         retries: Number of retry attempts for transient errors.
         timeout: Request timeout in seconds.
+        response_format: "json" (default) returns parsed dict; "text" returns raw
+            HTML/text string with encoding auto-detected.
 
     Returns:
-        Parsed JSON response as dict.
+        Parsed JSON response as dict, or raw response text when response_format="text".
 
     Raises:
         ServiceAPIError: On non-transient HTTP errors.
@@ -62,6 +65,10 @@ def api_request(
                     endpoint=endpoint_key,
                 )
 
+            if response_format == "text":
+                response.encoding = response.apparent_encoding
+                return response.text
+
             return response.json()
 
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
@@ -82,8 +89,21 @@ def api_get(
     path_params: dict | None = None,
     retries: int = 3,
 ) -> dict:
-    """Convenience wrapper for GET requests."""
+    """Convenience wrapper for GET requests returning JSON."""
     return api_request("GET", endpoint_key, params=params, path_params=path_params, retries=retries)
+
+
+def api_get_text(
+    endpoint_key: str,
+    params: dict | None = None,
+    path_params: dict | None = None,
+    retries: int = 3,
+) -> str:
+    """Convenience wrapper for GET requests returning raw HTML/text."""
+    return api_request(
+        "GET", endpoint_key, params=params, path_params=path_params,
+        retries=retries, response_format="text",
+    )
 
 
 def api_post(
