@@ -35,6 +35,25 @@ uv run python scripts/auth/test_connection.py
 uv run mcp-tw-judgment
 ```
 
+## 工具使用範例
+
+> **You：** 最近有哪些和著作權有關的判決
+
+**AI call：** tw-judgment - search_judgments (MCP)(keyword: "著作權")
+  ⎿  {
+       "keyword": "著作權",
+       "total": 55265,
+
+**Result：** 以下是最近的著作權相關判決（共 55,265 筆，以下列出最新 10 件核心案件）：
+ 115.04.15 │ 智慧財產及商業法院   │ 114年民著訴52 │ 侵害著作權有關人格權爭議
+ ...
+
+> **You：** 請告訴我 114年民著訴52 的詳細資訊
+
+**AI call：** tw-judgment - get_judgment (MCP)(judgment_id: "IPCV,114,民著訴,52,20260415,1")
+
+**Result：** 114年民著訴52 的詳細資訊如下：...
+
 ## 專案結構
 
 ```
