@@ -27,6 +27,7 @@ An MCP server for searching Taiwan judicial judgments, exposing AI-callable tool
 |---|---|
 | `search_judgments` | Full-text keyword search across all judicial judgments. Paginated 20 per page. Returns `judgment_id`, title, ruling date, case reason, URL, and a text preview per entry. |
 | `get_judgment` | Fetch the complete text and metadata of a single judgment by its `judgment_id`. |
+| `lookup_legal_term` | Look up a legal term in the 司法院裁判書用語辭典. Returns definitions for each applicable legal domain (民事、刑事、行政、家事). Optionally filter by `domain`. |
 
 ## Requirements
 
@@ -145,11 +146,14 @@ mcp-tw-judgment/
 ├── config/settings.py           # API base URL, endpoints, request headers
 ├── connectors/rest_client.py    # HTTP GET helper with retry + encoding detection
 ├── auth/none.py                 # No-op auth module (public endpoint)
-├── parser/judgment_parser.py    # Pure HTML parsers (no HTTP)
+├── parser/
+│   ├── judgment_parser.py       # Pure HTML parsers for judgments (no HTTP)
+│   └── terms_parser.py          # Pure HTML parsers for 用語辭典 (no HTTP)
 ├── tools/judgment_tools.py      # MCP tool definitions
 ├── tests/
 │   ├── fixtures/                # Saved HTML responses for offline unit tests
 │   ├── test_judgment_parser.py  # Unit tests (no network)
+│   ├── test_terms_parser.py     # Unit tests for terms parser (no network)
 │   └── test_all_tools.py        # Tool tests (live API, opt-in via RUN_LIVE_TESTS=1)
 └── scripts/auth/test_connection.py
 ```

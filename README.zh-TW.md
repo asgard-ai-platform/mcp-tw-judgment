@@ -27,6 +27,7 @@
 |---|---|
 | `search_judgments` | 裁判書全文關鍵字搜尋，每頁 20 筆。每筆結果包含 `judgment_id`、標題、裁判日期、案由、URL、與摘要片段。 |
 | `get_judgment` | 透過 `judgment_id` 取得單一裁判書的完整內容與基本資料。 |
+| `lookup_legal_term` | 查詢司法院裁判書用語辭典，取得法律名詞在各法領域（民事、刑事、行政、家事）的定義。可透過 `domain` 參數篩選特定法領域。 |
 
 ## 環境需求
 
@@ -145,11 +146,14 @@ mcp-tw-judgment/
 ├── config/settings.py           # API 基礎 URL、端點、請求標頭
 ├── connectors/rest_client.py    # HTTP GET helper（含重試 + 編碼偵測）
 ├── auth/none.py                 # 無認證模組（公開 API）
-├── parser/judgment_parser.py    # 純 HTML 解析（不含 HTTP）
+├── parser/
+│   ├── judgment_parser.py       # 純 HTML 解析：裁判書（不含 HTTP）
+│   └── terms_parser.py          # 純 HTML 解析：用語辭典（不含 HTTP）
 ├── tools/judgment_tools.py      # MCP 工具定義
 ├── tests/
 │   ├── fixtures/                # 儲存的 HTML 回應（供離線單元測試使用）
 │   ├── test_judgment_parser.py  # 單元測試（無需網路）
+│   ├── test_terms_parser.py     # 用語辭典解析器單元測試（無需網路）
 │   └── test_all_tools.py        # 工具測試（即時 API，需 RUN_LIVE_TESTS=1）
 └── scripts/auth/test_connection.py
 ```
