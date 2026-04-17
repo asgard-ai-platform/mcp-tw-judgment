@@ -15,8 +15,9 @@ DEFAULT_PER_PAGE = 20
 # /FJUD/data.aspx       — single judgment detail (param: id)
 
 ENDPOINTS = {
-    "search": "/FJUD/qryresult.aspx",
-    "detail": "/FJUD/data.aspx",
+    "search": "/FJUD/qryresult.aspx",       # step 1: submit keyword → returns hidQID
+    "list":   "/FJUD/qryresultlst.aspx",    # step 2: fetch results via qid (in iframe)
+    "detail": "/FJUD/data.aspx",            # single judgment full text
 }
 
 
