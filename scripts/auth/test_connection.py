@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Test API connection and validate credentials.
+"""Test connection to the judicial judgment search system.
 
-Verifies that environment variables are set and the API is reachable.
+Verifies that the 司法院全文檢索 endpoint is reachable and returns results.
 
 Usage:
     python scripts/auth/test_connection.py
@@ -15,57 +15,34 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from config.settings import get_headers, get_url, BASE_URL
 
 
-def check_env_vars():
-    """Check that required environment variables are set."""
-    print("Checking environment variables...")
-
-    # TODO: Update with your required env vars
-    required_vars = [
-        "SERVICE_API_TOKEN",
-    ]
-
-    missing = [var for var in required_vars if not os.environ.get(var)]
-
-    if missing:
-        print(f"  FAIL: Missing environment variables:")
-        for var in missing:
-            print(f"    - {var}")
-        return False
-
-    print("  OK: All required environment variables are set.")
-    return True
+TEST_KEYWORD = "著作權"
 
 
 def check_connection():
-    """Test API connectivity with a simple request."""
+    """Test reachability of the judgment search endpoint."""
     import requests
 
-    print(f"\nTesting connection to {BASE_URL}...")
+    url = get_url("search")
+    print(f"Testing connection to {url} ...")
 
     try:
-        headers = get_headers()
-        # TODO: Replace with a lightweight endpoint for your service
-        url = get_url("list_items")
         response = requests.get(
             url,
-            headers=headers,
-            params={"per_page": 1},
+            headers=get_headers(),
+            params={"akw": TEST_KEYWORD},
             timeout=15,
         )
 
         print(f"  Status: {response.status_code}")
 
         if response.status_code == 200:
-            print(f"  OK: Connection successful.")
+            content_length = len(response.text)
+            has_results = "jud" in response.text.lower() or "裁判" in response.text
+            print(f"  OK: Response received ({content_length:,} bytes).")
+            print(f"  Results present: {'yes' if has_results else 'no (empty or unexpected HTML)'}")
             return True
-        elif response.status_code == 401:
-            print(f"  FAIL: Authentication failed. Check your credentials.")
-            return False
-        elif response.status_code == 403:
-            print(f"  FAIL: Access forbidden. Check your permissions/scopes.")
-            return False
         else:
-            print(f"  WARN: Unexpected status code {response.status_code}")
+            print(f"  FAIL: Unexpected status code {response.status_code}")
             print(f"  Response: {response.text[:300]}")
             return False
 
@@ -83,15 +60,11 @@ def check_connection():
 def main():
     print("=" * 50)
     print("MCP Server — Connection Test")
+    print(f"Target: {BASE_URL}")
     print("=" * 50)
 
-    env_ok = check_env_vars()
-    if not env_ok:
-        print("\nFix the missing environment variables and try again.")
-        sys.exit(1)
-
-    conn_ok = check_connection()
-    if not conn_ok:
+    ok = check_connection()
+    if not ok:
         print("\nConnection test failed.")
         sys.exit(1)
 
