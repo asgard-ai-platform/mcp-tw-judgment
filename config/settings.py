@@ -1,59 +1,30 @@
 import os
 
-# =============================================================================
-# TODO: Update these values for your service
-# =============================================================================
+from auth.none import get_auth_headers
 
-# API base URL
-BASE_URL = "https://api.example.com"
-
-# API version prefix
-API_VERSION = "v1"
+# API base URL — 司法院全文檢索系統
+BASE_URL = "https://judgment.judicial.gov.tw"
 
 # Default pagination size
-DEFAULT_PER_PAGE = 50
+DEFAULT_PER_PAGE = 20
 
 # =============================================================================
-# Auth — choose ONE auth module and import it here
+# Endpoint map
 # =============================================================================
-# For Bearer token auth:
-# from auth.bearer import get_auth_headers
-#
-# For API key auth:
-# from auth.api_key import get_auth_headers
-#
-# For OAuth 2.0 auth:
-# from auth.oauth2 import get_auth_headers
-#
-# For no auth (public APIs):
-# from auth.none import get_auth_headers
-
-from auth.bearer import get_auth_headers  # TODO: change to your auth module
-
-# =============================================================================
-# Endpoint map — define your API endpoints here
-# =============================================================================
-# Supports path parameter substitution: {param} will be replaced by kwargs
-#
-# Example:
-#   ENDPOINTS = {
-#       "orders": "/v1/orders",
-#       "order_detail": "/v1/orders/{order_id}",
-#       "products": "/v1/products",
-#       "product_detail": "/v1/products/{product_id}",
-#   }
+# /FJUD/qryresult.aspx  — keyword full-text search (param: akw)
+# /FJUD/data.aspx       — single judgment detail (param: id)
 
 ENDPOINTS = {
-    "list_items": f"/{API_VERSION}/items",
-    "get_item": f"/{API_VERSION}/items/{{item_id}}",
+    "search": "/FJUD/qryresult.aspx",
+    "detail": "/FJUD/data.aspx",
 }
 
 
 def get_headers() -> dict:
-    """Get request headers including auth."""
+    """Get request headers (no auth required for public judicial API)."""
     headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7",
     }
     headers.update(get_auth_headers())
     return headers
