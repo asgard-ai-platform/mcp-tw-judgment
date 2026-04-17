@@ -5,6 +5,8 @@ No HTTP calls here — fetching is handled by connectors/rest_client.py.
 """
 
 import re
+from urllib.parse import urlparse, parse_qs, unquote
+
 from bs4 import BeautifulSoup
 
 
@@ -88,13 +90,70 @@ def parse_result_list(list_html: str) -> list[dict]:
 
         link_tag = cells[1].find("a", href=True)
         title_text = re.sub(r"\s*（\d+K）", "", cells[1].get_text(" ", strip=True))
+        href = link_tag["href"] if link_tag else ""
+        judgment_id = _extract_id_from_href(href)
 
         results.append({
+            "judgment_id": judgment_id,
             "title":       title_text,
             "date":        cells[2].get_text(strip=True),
             "case_reason": cells[3].get_text(strip=True),
-            "url":         link_tag["href"] if link_tag else "",
+            "url":         href,
             "summary":     "",
         })
 
     return results
+
+
+# =============================================================================
+# Detail page
+# =============================================================================
+
+def parse_detail(detail_html: str) -> dict:
+    """Parse a single judgment's metadata and full text.
+
+    Metadata is in div#jud (int-table); each row has a div.col-th label and
+    div.col-td value. Content body is in div.htmlcontent.
+
+    Args:
+        detail_html: Raw HTML of /FJUD/data.aspx response.
+
+    Returns:
+        Dict with keys:
+        - title: full case title (court + year + case number + type)
+        - date: ruling date in ROC calendar (e.g. "民國 115 年 04 月 15 日")
+        - case_reason: 裁判案由
+        - content: full judgment text (newline-separated paragraphs)
+    """
+    soup = BeautifulSoup(detail_html, "html.parser")
+
+    meta = soup.select_one("div#jud")
+    col_td = meta.select("div.col-td") if meta else []
+    title       = col_td[0].get_text(" ", strip=True) if len(col_td) > 0 else ""
+    date        = col_td[1].get_text(" ", strip=True) if len(col_td) > 1 else ""
+    case_reason = col_td[2].get_text(" ", strip=True) if len(col_td) > 2 else ""
+
+    body = soup.select_one("div.htmlcontent")
+    content = body.get_text("\n", strip=True) if body else ""
+
+    return {
+        "title":       title,
+        "date":        date,
+        "case_reason": case_reason,
+        "content":     content,
+    }
+
+
+# =============================================================================
+# Internal helpers
+# =============================================================================
+
+def _extract_id_from_href(href: str) -> str:
+    """Extract the judgment ID from a relative detail URL.
+
+    E.g. "data.aspx?ty=JD&id=IPCV%2c114%2c...&ot=in" → "IPCV,114,民著訴,..."
+    Returns empty string if id param is absent.
+    """
+    qs = parse_qs(urlparse(href).query)
+    ids = qs.get("id", [])
+    return unquote(ids[0]) if ids else ""
