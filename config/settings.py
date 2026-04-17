@@ -1,7 +1,11 @@
 from auth.none import get_auth_headers
 
-# API base URL — 司法院全文檢索系統
-BASE_URL = "https://judgment.judicial.gov.tw"
+# API base URLs
+BASE_URL       = "https://judgment.judicial.gov.tw"   # 裁判書系統
+TERMS_BASE_URL = "https://terms.judicial.gov.tw"      # 司法院名詞解釋
+
+# Default pagination size
+DEFAULT_PER_PAGE = 20
 
 # =============================================================================
 # Endpoint map
@@ -10,9 +14,12 @@ BASE_URL = "https://judgment.judicial.gov.tw"
 # /FJUD/data.aspx       — single judgment detail (param: id)
 
 ENDPOINTS = {
+    # 裁判書系統 (BASE_URL)
     "search": "/FJUD/qryresult.aspx",       # step 1: submit keyword → returns hidQID
     "list":   "/FJUD/qryresultlst.aspx",    # step 2: fetch results via qid (in iframe)
     "detail": "/FJUD/data.aspx",            # single judgment full text
+    # 名詞解釋系統 (TERMS_BASE_URL)
+    "terms_lookup": "/TermContent.aspx",    # look up exact term, param: TRMTERM, SYS
 }
 
 
@@ -26,12 +33,13 @@ def get_headers() -> dict:
     return headers
 
 
-def get_url(endpoint_key: str, **kwargs) -> str:
-    """Build full URL for an endpoint with path parameter substitution.
+def get_url(endpoint_key: str, base_url: str = BASE_URL, **kwargs) -> str:
+    """Build full URL for an endpoint with optional base URL override.
 
     Args:
         endpoint_key: Key from ENDPOINTS dict.
-        **kwargs: Path parameters to substitute (e.g., item_id="123").
+        base_url: Override the default BASE_URL (e.g. pass TERMS_BASE_URL).
+        **kwargs: Path parameters to substitute.
 
     Returns:
         Full URL string.
@@ -42,4 +50,4 @@ def get_url(endpoint_key: str, **kwargs) -> str:
     path = ENDPOINTS[endpoint_key]
     if kwargs:
         path = path.format(**kwargs)
-    return f"{BASE_URL}{path}"
+    return f"{base_url}{path}"
