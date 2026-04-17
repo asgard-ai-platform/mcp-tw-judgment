@@ -50,7 +50,7 @@ def check_connection():
         print(f"  FAIL: Cannot connect to {BASE_URL}")
         return False
     except requests.exceptions.Timeout:
-        print(f"  FAIL: Connection timed out.")
+        print("  FAIL: Connection timed out.")
         return False
     except Exception as e:
         print(f"  FAIL: {e}")

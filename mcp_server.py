@@ -1,7 +1,3 @@
-#!/usr/bin/env python3
-import sys
-import os
-
 import tools.judgment_tools  # noqa: F401
 
 from app import mcp
