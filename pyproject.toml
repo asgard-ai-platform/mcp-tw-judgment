@@ -5,36 +5,55 @@ build-backend = "hatchling.build"
 [project]
 name = "mcp-tw-judgment"
 version = "0.1.0"
-description = "MCP Server for Tw Judgment — AI-callable tools via Model Context Protocol"
+description = "MCP server for searching Taiwan judicial judgments (司法院裁判書系統) — AI-callable tools over Model Context Protocol"
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 authors = [
     {name = "Asgard AI Platform", email = "dev@asgard.ai"},
 ]
+keywords = [
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "ai-tools",
+    "claude",
+    "llm-tools",
+    "taiwan",
+    "judicial",
+    "judgment",
+    "legal-tech",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Legal Industry",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Markup :: HTML",
+    "Natural Language :: Chinese (Traditional)",
+]
 
-# Base dependencies (always required)
 dependencies = [
     "requests>=2.31.0",
     "mcp>=1.0.0",
     "beautifulsoup4>=4.14.3",
 ]
 
-# ---------------------------------------------------------------------------
-# Connector-specific dependencies — uncomment what you need:
-# ---------------------------------------------------------------------------
-# RSS connector:
-#   "feedparser>=6.0.0",
-#
-# Scraper connector:
-#   "beautifulsoup4>=4.12.0",
-#
-# MQTT connector:
-#   "paho-mqtt>=2.0.0",
-# ---------------------------------------------------------------------------
+[project.urls]
+Homepage = "https://github.com/asgard-ai-platform/mcp-tw-judgment"
+Repository = "https://github.com/asgard-ai-platform/mcp-tw-judgment"
+Issues = "https://github.com/asgard-ai-platform/mcp-tw-judgment/issues"
+Changelog = "https://github.com/asgard-ai-platform/mcp-tw-judgment/blob/main/CHANGELOG.md"
 
 [project.scripts]
 mcp-tw-judgment = "mcp_server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["config", "connectors", "auth", "tools", "parser"]
+force-include = {"app.py" = "app.py", "mcp_server.py" = "mcp_server.py"}
