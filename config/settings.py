@@ -3,9 +3,6 @@ from auth.none import get_auth_headers
 # API base URL — 司法院全文檢索系統
 BASE_URL = "https://judgment.judicial.gov.tw"
 
-# Default pagination size
-DEFAULT_PER_PAGE = 20
-
 # =============================================================================
 # Endpoint map
 # =============================================================================
