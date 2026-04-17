@@ -37,8 +37,4 @@ dependencies = [
 mcp-tw-judgment = "mcp_server:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["config", "connectors", "auth", "tools"]
-
-[tool.hatch.build.targets.wheel.force-include]
-"app.py" = "app.py"
-"mcp_server.py" = "mcp_server.py"
+packages = ["config", "connectors", "auth", "tools", "parser"]
