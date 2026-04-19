@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-MCP server for searching Taiwan judicial judgments via [司法院裁判書系統](https://judgment.judicial.gov.tw/FJUD/default.aspx). Exposes two tools over stdio JSON-RPC 2.0: `search_judgments` and `get_judgment`.
+MCP server for searching Taiwan judicial judgments via [司法院裁判書系統](https://judgment.judicial.gov.tw/FJUD/default.aspx). Exposes four tools over stdio JSON-RPC 2.0: `search_judgments`, `get_judgment`, `get_judgment_pdf`, and `lookup_legal_term`.
 
 ## Commands
 

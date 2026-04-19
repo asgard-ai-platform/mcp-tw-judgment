@@ -1,5 +1,3 @@
-import os
-
 from auth.none import get_auth_headers
 
 # API base URLs
