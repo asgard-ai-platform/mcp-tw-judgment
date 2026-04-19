@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mcp-tw-judgment"
-version = "0.2.0"
+version = "0.3.0"
 description = "MCP server for searching Taiwan judicial judgments (司法院裁判書系統) — AI-callable tools over Model Context Protocol"
 readme = "README.md"
 license = {text = "MIT"}

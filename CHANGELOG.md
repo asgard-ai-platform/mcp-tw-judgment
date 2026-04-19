@@ -1,9 +1,9 @@
 # Changelog
 
-## [Unreleased]
+## [0.3.0] - 2026-04-19
 
 ### Added
-- New `get_judgment_pdf` tool: returns or downloads a judgment's PDF. Behavior controlled by the `save_to` arg or `MCP_TW_JUDGMENT_DOWNLOAD_DIR` env var; when neither is set, only the URL is returned.
+- New `get_judgment_pdf` tool: returns or downloads a judgment's PDF. Behavior controlled by the `save_to` arg or `MCP_TW_JUDGMENT_DOWNLOAD_DIR` env var; when neither is set, only the URL is returned. Re-calls with the same path return `cached: true` without re-downloading.
 - `get_judgment` now returns a `paragraphs` field alongside `content`: a flat list of `{id, section, level, heading, text}` entries with stable hierarchical IDs (e.g. `理由.一.(三).2`) for precise citation and downstream highlighting.
 
 ### Changed
