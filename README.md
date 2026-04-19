@@ -26,7 +26,7 @@ An MCP server for searching Taiwan judicial judgments, exposing AI-callable tool
 | Tool | Description |
 |---|---|
 | `search_judgments` | Full-text keyword search across all judicial judgments. Paginated 20 per page. Returns `judgment_id`, title, ruling date, case reason, URL, and a text preview per entry. |
-| `get_judgment` | Fetch the complete text and metadata of a single judgment by its `judgment_id`. |
+| `get_judgment` | Fetch the complete text and metadata of a single judgment by its `judgment_id`. Returns both a flat `content` string and a structured `paragraphs` list (each entry has `id`/`section`/`level`/`heading`/`text` — e.g. `理由.一.(三).2`) for precise citation. |
 | `lookup_legal_term` | Look up a legal term in the 司法院裁判書用語辭典. Returns definitions for each applicable legal domain (民事、刑事、行政、家事). Optionally filter by `domain`. |
 | `get_judgment_pdf` | Return or download a judgment's PDF. When `save_to` (arg) or `MCP_TW_JUDGMENT_DOWNLOAD_DIR` (env) is set, the file is saved locally and the path is returned; otherwise only the URL is returned. |
 
@@ -142,7 +142,40 @@ Add to your project's `.mcp.json`:
 
 **AI call：** `tw-judgment - get_judgment (MCP)(judgment_id: "IPCV,114,民著訴,52,20260415,1")`
 
-**Result：** 114年民著訴52 的詳細資訊如下：...
+```
+{
+  "title": "智慧財產及商業法院 114 年度民著訴字第 52 號民事判決",
+  "date":  "民國 115 年 04 月 15 日",
+  "case_reason": "侵害著作權有關人格權爭議",
+  "content": "……全文字串……",
+  "paragraphs": [
+    {"id": "主文", "section": "主文", "level": 1, "heading": null, "text": "……"},
+    {"id": "事實及理由.一", "section": "事實及理由", "level": 2, "heading": "原告主張：", "text": ""},
+    {"id": "事實及理由.一.(一)", "section": "事實及理由", "level": 3, "heading": null, "text": "……"},
+    ...
+  ]
+}
+```
+
+**Result：** 本件爭點為…（AI 會直接引用 `事實及理由.一.(一)` 這段）
+
+> **You：** 把這份判決的 PDF 抓下來放桌面，我要附在書狀證物裡
+
+**AI call：** `tw-judgment - get_judgment_pdf (MCP)(judgment_id: "IPCV,114,民著訴,52,20260415,1", save_to: "~/Desktop")`
+
+```
+{
+  "judgment_id": "IPCV,114,民著訴,52,20260415,1",
+  "url":         "https://judgment.judicial.gov.tw/FILES/IPCV/114%2c%e6%b0%91%e8%91%97%e8%a8%b4%2c52%2c20260415%2c1.pdf",
+  "path":        "/Users/you/Desktop/IPCV,114,民著訴,52,20260415,1.pdf",
+  "size_bytes":  245678,
+  "cached":      false
+}
+```
+
+**Result：** 已下載到 `~/Desktop/IPCV,114,民著訴,52,20260415,1.pdf`。
+
+> Tip: Set `MCP_TW_JUDGMENT_DOWNLOAD_DIR=~/Downloads/tw-judgments` to have every call download to that folder by default; omit `save_to` in the call and the tool returns the URL only (no download).
 
 ## Project Structure
 
