@@ -14,7 +14,7 @@ An MCP server for searching Taiwan judicial judgments, exposing AI-callable tool
 
 ## Features
 
-- **Two MCP tools** — full-text search across all Taiwan judicial judgments and full-document fetch by ID
+- **Four MCP tools** — full-text search, full-document fetch by ID, PDF download, and legal-term lookup
 - **stdio JSON-RPC 2.0** — standard MCP transport protocol
 - **`@mcp.tool()` decorator** — Pydantic-typed tool registration
 - **Two-step scraping** — handles the judicial site's iframe-based result rendering
