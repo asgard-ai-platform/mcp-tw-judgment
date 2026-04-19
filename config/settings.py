@@ -1,3 +1,5 @@
+import os
+
 from auth.none import get_auth_headers
 
 # API base URLs
@@ -6,6 +8,10 @@ TERMS_BASE_URL = "https://terms.judicial.gov.tw"      # 司法院名詞解釋
 
 # Default pagination size
 DEFAULT_PER_PAGE = 20
+
+# Environment variable controlling default PDF download directory.
+# When unset and tool arg `save_to` is None, get_judgment_pdf returns URL only.
+DOWNLOAD_DIR_ENV = "MCP_TW_JUDGMENT_DOWNLOAD_DIR"
 
 # =============================================================================
 # Endpoint map
@@ -18,6 +24,7 @@ ENDPOINTS = {
     "search": "/FJUD/qryresult.aspx",       # step 1: submit keyword → returns hidQID
     "list":   "/FJUD/qryresultlst.aspx",    # step 2: fetch results via qid (in iframe)
     "detail": "/FJUD/data.aspx",            # single judgment full text
+    "pdf":    "/FILES/{court}/{rest}.pdf",  # judgment PDF (court + url-encoded rest)
     # 名詞解釋系統 (TERMS_BASE_URL)
     "terms_lookup": "/TermContent.aspx",    # look up exact term, param: TRMTERM, SYS
 }
