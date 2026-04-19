@@ -28,6 +28,7 @@ An MCP server for searching Taiwan judicial judgments, exposing AI-callable tool
 | `search_judgments` | Full-text keyword search across all judicial judgments. Paginated 20 per page. Returns `judgment_id`, title, ruling date, case reason, URL, and a text preview per entry. |
 | `get_judgment` | Fetch the complete text and metadata of a single judgment by its `judgment_id`. |
 | `lookup_legal_term` | Look up a legal term in the 司法院裁判書用語辭典. Returns definitions for each applicable legal domain (民事、刑事、行政、家事). Optionally filter by `domain`. |
+| `get_judgment_pdf` | Return or download a judgment's PDF. When `save_to` (arg) or `MCP_TW_JUDGMENT_DOWNLOAD_DIR` (env) is set, the file is saved locally and the path is returned; otherwise only the URL is returned. |
 
 ## Requirements
 
@@ -110,6 +111,12 @@ Add to your project's `.mcp.json`:
   }
 }
 ```
+
+### Environment Variables
+
+| Variable | Effect |
+|---|---|
+| `MCP_TW_JUDGMENT_DOWNLOAD_DIR` | Default directory for `get_judgment_pdf` downloads. If unset and the tool's `save_to` arg is `None`, `get_judgment_pdf` returns the URL without downloading. |
 
 ## Example Tool Usage
 

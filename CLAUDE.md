@@ -37,7 +37,7 @@ stdio (JSON-RPC 2.0)
   → mcp_server.py          side-effect import triggers tool registration
     → app.py               FastMCP singleton
       → tools/judgment_tools.py   @mcp.tool() definitions
-          → connectors/rest_client.py   api_get_text() fetches raw HTML
+          → connectors/rest_client.py   api_get_text() fetches raw HTML; api_get_bytes() for binary downloads
           → parser/judgment_parser.py   pure HTML → structured data
             → config/settings.py        BASE_URL, ENDPOINTS, headers
 ```
@@ -49,6 +49,7 @@ stdio (JSON-RPC 2.0)
 - **Two-step fetch**: `search_judgments` sends `GET /FJUD/qryresult.aspx?akw=…` → parses `hidQID` → fetches `GET /FJUD/qryresultlst.aspx?ty=JUDBOOK&q={qid}&page={n}` (the iframe content)
 - **Parser layer**: `parser/judgment_parser.py` is pure functions (HTML string in, structured data out). No HTTP calls. Tested offline with fixtures in `tests/fixtures/`
 - **`@live` decorator**: in `tests/test_all_tools.py`, wraps `unittest.skipUnless(os.environ.get("RUN_LIVE_TESTS"), …)`
+- **PDF download**: `get_judgment_pdf` resolves URL via `extract_pdf_url(detail_html)` (primary) or constructed `/FILES/{court}/{rest}.pdf` (fallback). Download target chosen by precedence: `save_to` arg > `MCP_TW_JUDGMENT_DOWNLOAD_DIR` env > URL-only
 
 ### Code Conventions
 
