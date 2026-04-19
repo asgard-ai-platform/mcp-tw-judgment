@@ -25,7 +25,7 @@ def api_request(
     timeout: int = 60,
     response_format: str = "json",
     base_url: str = BASE_URL,
-) -> dict | str:
+) -> dict | str | bytes:
     """Make an HTTP request with exponential backoff retry.
 
     Args:
@@ -37,11 +37,13 @@ def api_request(
         retries: Number of retry attempts for transient errors.
         timeout: Request timeout in seconds.
         response_format: "json" (default) returns parsed dict; "text" returns raw
-            HTML/text string with encoding auto-detected.
+            HTML/text string with encoding auto-detected; "bytes" returns raw
+            response body (for binary downloads).
         base_url: Override the default BASE_URL for multi-host setups.
 
     Returns:
-        Parsed JSON response as dict, or raw response text when response_format="text".
+        Parsed JSON dict by default; raw text string when response_format="text";
+        raw bytes when response_format="bytes".
 
     Raises:
         ServiceAPIError: On non-transient HTTP errors.
@@ -70,6 +72,9 @@ def api_request(
             if response_format == "text":
                 response.encoding = response.apparent_encoding
                 return response.text
+
+            if response_format == "bytes":
+                return response.content
 
             return response.json()
 
@@ -106,6 +111,20 @@ def api_get_text(
     return api_request(
         "GET", endpoint_key, params=params, path_params=path_params,
         retries=retries, response_format="text", base_url=base_url,
+    )
+
+
+def api_get_bytes(
+    endpoint_key: str,
+    params: dict | None = None,
+    path_params: dict | None = None,
+    retries: int = 3,
+    base_url: str = BASE_URL,
+) -> bytes:
+    """Convenience wrapper for GET requests returning raw bytes (binary downloads)."""
+    return api_request(
+        "GET", endpoint_key, params=params, path_params=path_params,
+        retries=retries, response_format="bytes", base_url=base_url,
     )
 
 
