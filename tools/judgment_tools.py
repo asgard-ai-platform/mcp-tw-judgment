@@ -154,9 +154,8 @@ def get_judgment_pdf(
 
 def _resolve_pdf_url(judgment_id: str) -> str:
     """Find the PDF URL for a judgment. Prefer the detail page link; fall back
-    to constructing the URL from judgment_id.
-
-    Raises ParseError-equivalent via explicit exception when neither yields a URL.
+    to constructing the URL from judgment_id. Always returns a string — 404s on
+    the constructed URL surface later via ``api_get_bytes`` (ServiceAPIError).
     """
     try:
         detail_html = api_get_text(
