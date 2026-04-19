@@ -165,6 +165,158 @@ def extract_pdf_url(detail_html: str) -> str | None:
 
 
 # =============================================================================
+# Paragraph structuring
+# =============================================================================
+
+# Section headers that can appear on their own line at the top of a part.
+# Matching is done after stripping all whitespace/NBSP from the line.
+_SECTION_NAMES = ("主文", "事實及理由", "事實", "理由")
+
+# Lines that mark the start of appendix/footer material (附註, 附圖, 附表).
+# When one of these is encountered, structural parsing stops and subsequent
+# lines are simply appended as plain text to the last paragraph.
+_FOOTER_SENTINELS = frozenset({"附註：", "附圖：", "附表："})
+
+# Level 2: 一、二、三、…十、一百、
+_RE_LEVEL2 = re.compile(r"^([一二三四五六七八九十百零]+)\s*、\s*(.*)$")
+# Level 3a: (一)(二)… or （一）（二）…
+_RE_LEVEL3_PAREN = re.compile(r"^[（(]\s*([一二三四五六七八九十百零]+)\s*[）)]\s*(.*)$")
+# Level 3b: ㈠㈡㈢㈣㈤㈥㈦㈧㈨㈩ (Unicode circled CJK numbers U+3220–U+3229)
+_CIRCLED_TO_HANZI = {
+    "㈠": "一", "㈡": "二", "㈢": "三", "㈣": "四", "㈤": "五",
+    "㈥": "六", "㈦": "七", "㈧": "八", "㈨": "九", "㈩": "十",
+}
+_RE_LEVEL3_CIRCLED = re.compile(r"^([㈠㈡㈢㈣㈤㈥㈦㈧㈨㈩])\s*(.*)$")
+# Level 4: 1. 2、 etc. (Arabic number followed by . or 、)
+_RE_LEVEL4 = re.compile(r"^(\d+)\s*[.、]\s*(.*)$")
+
+
+def _normalize_ws(s: str) -> str:
+    """Strip all whitespace and non-breaking spaces from a string."""
+    return re.sub(r"[\xa0\u3000\s]+", "", s)
+
+
+def parse_paragraphs(detail_html: str) -> list[dict]:
+    """Split judgment body into a flat list of hierarchically-identified paragraphs.
+
+    Each entry carries a stable ``id`` (e.g. ``"事實及理由.一.(三).2"``) so
+    downstream consumers (LLMs, highlighters) can reference specific segments.
+
+    Non-matching lines are merged into the running paragraph's ``text``.
+    When no section header is detected at all, the entire body is returned
+    as a single ``{"id": "全文", "section": "全文", "level": 1, ...}`` entry.
+
+    Args:
+        detail_html: Raw HTML of /FJUD/data.aspx response.
+
+    Returns:
+        List of ``{id, section, level, heading, text}`` dicts in document order.
+    """
+    soup = BeautifulSoup(detail_html, "html.parser")
+    body = soup.select_one("div.htmlcontent")
+    if not body:
+        return []
+
+    # Preserve line breaks so each structural cue is its own line.
+    raw = body.get_text("\n", strip=True)
+    lines = [ln.strip() for ln in raw.split("\n") if ln.strip()]
+    if not lines:
+        return []
+
+    paragraphs: list[dict] = []
+    section: str | None = None
+    seen_sections: set[str] = set()
+    current_l2_id: str | None = None
+    current_l3_id: str | None = None
+    in_footer: bool = False  # True once an appendix/footer sentinel is encountered
+
+    def _emit(p: dict) -> None:
+        paragraphs.append(p)
+
+    def _append_to_last(text: str) -> None:
+        if paragraphs:
+            prev = paragraphs[-1]
+            prev["text"] = (prev["text"] + " " + text).strip() if prev["text"] else text
+
+    for line in lines:
+        # Once we enter appendix/footer territory, skip structural parsing.
+        if line in _FOOTER_SENTINELS:
+            in_footer = True
+            continue
+        if in_footer:
+            _append_to_last(line)
+            continue
+
+        # Section header: a standalone line whose whitespace-normalised form
+        # matches a known section name, and which we haven't already seen
+        # (prevents false positives like "判決如\n主文" at the end of a judgment).
+        normalized = _normalize_ws(line)
+        if normalized in _SECTION_NAMES and normalized not in seen_sections:
+            section = normalized
+            seen_sections.add(section)
+            current_l2_id = None
+            current_l3_id = None
+            _emit({"id": section, "section": section, "level": 1,
+                   "heading": None, "text": ""})
+            continue
+
+        if section is None:
+            # Haven't hit a section yet — skip header/meta noise.
+            continue
+
+        # Level 2: 一、xxx
+        m2 = _RE_LEVEL2.match(line)
+        if m2:
+            num, rest = m2.group(1), m2.group(2).strip()
+            current_l2_id = f"{section}.{num}"
+            current_l3_id = None
+            heading = rest if rest else None
+            _emit({"id": current_l2_id, "section": section, "level": 2,
+                   "heading": heading, "text": ""})
+            continue
+
+        # Level 3a: (一) xxx  /  （一） xxx
+        m3p = _RE_LEVEL3_PAREN.match(line)
+        if m3p and current_l2_id:
+            num, rest = m3p.group(1), m3p.group(2).strip()
+            current_l3_id = f"{current_l2_id}.({num})"
+            heading = rest if rest else None
+            _emit({"id": current_l3_id, "section": section, "level": 3,
+                   "heading": heading, "text": ""})
+            continue
+
+        # Level 3b: ㈠㈡… (circled CJK numbers)
+        m3c = _RE_LEVEL3_CIRCLED.match(line)
+        if m3c and current_l2_id:
+            circled, rest = m3c.group(1), m3c.group(2).strip()
+            hanzi = _CIRCLED_TO_HANZI[circled]
+            current_l3_id = f"{current_l2_id}.({hanzi})"
+            heading = rest if rest else None
+            _emit({"id": current_l3_id, "section": section, "level": 3,
+                   "heading": heading, "text": ""})
+            continue
+
+        # Level 4: 1. xxx
+        m4 = _RE_LEVEL4.match(line)
+        if m4 and (current_l3_id or current_l2_id):
+            parent = current_l3_id or current_l2_id
+            num, rest = m4.group(1), m4.group(2).strip()
+            _emit({"id": f"{parent}.{num}", "section": section, "level": 4,
+                   "heading": None, "text": rest})
+            continue
+
+        # Plain continuation line — merge into the last paragraph's text.
+        _append_to_last(line)
+
+    # Fallback: nothing structural found at all.
+    if not paragraphs:
+        return [{"id": "全文", "section": "全文", "level": 1,
+                 "heading": None, "text": " ".join(lines)}]
+
+    return paragraphs
+
+
+# =============================================================================
 # Internal helpers
 # =============================================================================
 
