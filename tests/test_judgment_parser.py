@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from parser.judgment_parser import (
     ParseError, extract_qid, parse_result_count, parse_result_list,
-    extract_pdf_url,
+    extract_pdf_url, parse_paragraphs,
 )
 
 FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -93,6 +93,57 @@ class TestExtractPdfUrl(unittest.TestCase):
     def test_returns_none_when_no_pdf_link(self):
         html = "<html><body><a href='other.aspx'>not a pdf</a></body></html>"
         self.assertIsNone(extract_pdf_url(html))
+
+
+class TestParseParagraphs(unittest.TestCase):
+
+    def setUp(self):
+        self.paragraphs = parse_paragraphs(load("detail_result.html"))
+
+    def test_returns_non_empty_list(self):
+        self.assertGreater(len(self.paragraphs), 0)
+
+    def test_each_paragraph_has_required_keys(self):
+        for p in self.paragraphs:
+            for key in ("id", "section", "level", "heading", "text"):
+                self.assertIn(key, p, msg=f"missing {key} in {p}")
+
+    def test_ids_are_unique(self):
+        ids = [p["id"] for p in self.paragraphs]
+        self.assertEqual(len(ids), len(set(ids)),
+                         "paragraph IDs must be globally unique")
+
+    def test_has_main_sections(self):
+        sections = {p["section"] for p in self.paragraphs}
+        # Every judgment has at least 主文 + (事實 or 事實及理由 or 理由)
+        self.assertIn("主文", sections)
+        self.assertTrue(
+            sections & {"事實", "事實及理由", "理由"},
+            f"expected one of 事實/事實及理由/理由, got {sections}",
+        )
+
+    def test_level_1_ids_match_section_names(self):
+        for p in self.paragraphs:
+            if p["level"] == 1:
+                self.assertEqual(p["id"], p["section"])
+
+    def test_level_2_id_format(self):
+        # 理由.一, 理由.二, ...
+        lvl2 = [p for p in self.paragraphs if p["level"] == 2]
+        for p in lvl2:
+            self.assertRegex(p["id"], r"^[^.]+\.[一二三四五六七八九十百]+$")
+
+    def test_fallback_when_no_sections(self):
+        plain = "<html><body><div class='htmlcontent'>隨便一段文字沒有章節。</div></body></html>"
+        result = parse_paragraphs(plain)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["section"], "全文")
+        self.assertEqual(result[0]["id"], "全文")
+        self.assertEqual(result[0]["level"], 1)
+        self.assertIn("隨便一段文字", result[0]["text"])
+
+    def test_empty_body_returns_empty_list(self):
+        self.assertEqual(parse_paragraphs("<html></html>"), [])
 
 
 if __name__ == "__main__":
