@@ -26,7 +26,7 @@
 | 工具 | 說明 |
 |---|---|
 | `search_judgments` | 裁判書全文關鍵字搜尋，每頁 20 筆。每筆結果包含 `judgment_id`、標題、裁判日期、案由、URL、與摘要片段。 |
-| `get_judgment` | 透過 `judgment_id` 取得單一裁判書的完整內容與基本資料。 |
+| `get_judgment` | 透過 `judgment_id` 取得單一裁判書的完整內容與基本資料。同時回傳純文字 `content` 與結構化 `paragraphs` 陣列（每段帶 `id`／`section`／`level`／`heading`／`text`，例如 `理由.一.(三).2`），方便 AI 精準引用段落。 |
 | `lookup_legal_term` | 查詢司法院裁判書用語辭典，取得法律名詞在各法領域（民事、刑事、行政、家事）的定義。可透過 `domain` 參數篩選特定法領域。 |
 | `get_judgment_pdf` | 取得判決書 PDF 連結；若傳入 `save_to` 參數或設定環境變數 `MCP_TW_JUDGMENT_DOWNLOAD_DIR`，會直接下載到該路徑並回傳檔案位置，否則只回傳 URL。 |
 
@@ -142,7 +142,40 @@ uv run mcp-tw-judgment
 
 **AI call：** `tw-judgment - get_judgment (MCP)(judgment_id: "IPCV,114,民著訴,52,20260415,1")`
 
-**Result：** 114年民著訴52 的詳細資訊如下：...
+```
+{
+  "title": "智慧財產及商業法院 114 年度民著訴字第 52 號民事判決",
+  "date":  "民國 115 年 04 月 15 日",
+  "case_reason": "侵害著作權有關人格權爭議",
+  "content": "……全文字串……",
+  "paragraphs": [
+    {"id": "主文", "section": "主文", "level": 1, "heading": null, "text": "……"},
+    {"id": "事實及理由.一", "section": "事實及理由", "level": 2, "heading": "原告主張：", "text": ""},
+    {"id": "事實及理由.一.(一)", "section": "事實及理由", "level": 3, "heading": null, "text": "……"},
+    ...
+  ]
+}
+```
+
+**Result：** 本件爭點為…（AI 直接引用 `事實及理由.一.(一)` 段落內容）
+
+> **You：** 把這份判決的 PDF 抓下來放桌面，我要附在書狀當證物
+
+**AI call：** `tw-judgment - get_judgment_pdf (MCP)(judgment_id: "IPCV,114,民著訴,52,20260415,1", save_to: "~/Desktop")`
+
+```
+{
+  "judgment_id": "IPCV,114,民著訴,52,20260415,1",
+  "url":         "https://judgment.judicial.gov.tw/FILES/IPCV/114%2c%e6%b0%91%e8%91%97%e8%a8%b4%2c52%2c20260415%2c1.pdf",
+  "path":        "/Users/you/Desktop/IPCV,114,民著訴,52,20260415,1.pdf",
+  "size_bytes":  245678,
+  "cached":      false
+}
+```
+
+**Result：** 已下載到 `~/Desktop/IPCV,114,民著訴,52,20260415,1.pdf`，可直接附入書狀當證物。
+
+> 提醒：設定環境變數 `MCP_TW_JUDGMENT_DOWNLOAD_DIR=~/Downloads/tw-judgments` 後，呼叫 `get_judgment_pdf` 時省略 `save_to` 會自動存到該資料夾；兩者都沒設定則只回傳 URL，不下載。
 
 ## 專案結構
 
