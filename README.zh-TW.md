@@ -28,6 +28,7 @@
 | `search_judgments` | 裁判書全文關鍵字搜尋，每頁 20 筆。每筆結果包含 `judgment_id`、標題、裁判日期、案由、URL、與摘要片段。 |
 | `get_judgment` | 透過 `judgment_id` 取得單一裁判書的完整內容與基本資料。 |
 | `lookup_legal_term` | 查詢司法院裁判書用語辭典，取得法律名詞在各法領域（民事、刑事、行政、家事）的定義。可透過 `domain` 參數篩選特定法領域。 |
+| `get_judgment_pdf` | 取得判決書 PDF 連結；若傳入 `save_to` 參數或設定環境變數 `MCP_TW_JUDGMENT_DOWNLOAD_DIR`，會直接下載到該路徑並回傳檔案位置，否則只回傳 URL。 |
 
 ## 環境需求
 
@@ -110,6 +111,12 @@ uv run mcp-tw-judgment
   }
 }
 ```
+
+### 環境變數
+
+| 變數 | 效果 |
+|---|---|
+| `MCP_TW_JUDGMENT_DOWNLOAD_DIR` | `get_judgment_pdf` 下載時的預設目錄。未設且未傳 `save_to` 參數時，`get_judgment_pdf` 只回傳 URL 不下載。 |
 
 ## 工具使用範例
 
