@@ -61,6 +61,16 @@ class TestToolRegistration(unittest.TestCase):
         self.assertIn("judgment_id", tool.inputSchema["properties"])
         self.assertIn("judgment_id", tool.inputSchema["required"])
 
+    def test_get_judgment_pdf_registered(self):
+        self.assertIn("get_judgment_pdf", self.tool_names)
+
+    def test_get_judgment_pdf_schema(self):
+        tool = next(t for t in self.tools if t.name == "get_judgment_pdf")
+        props = tool.inputSchema["properties"]
+        self.assertIn("judgment_id", props)
+        self.assertIn("save_to", props)
+        self.assertIn("judgment_id", tool.inputSchema["required"])
+
 
 class TestSearchJudgments(unittest.TestCase):
 
@@ -124,6 +134,70 @@ class TestGetJudgment(unittest.TestCase):
         detail = get_judgment(judgment_id=first_id)
         self.assertTrue(detail["title"])
         self.assertTrue(detail["content"])
+
+
+class TestGetJudgmentPdf(unittest.TestCase):
+
+    KNOWN_ID = "IPCV,114,民著訴,52,20260415,1"
+
+    @live
+    def test_returns_url_only_when_no_destination(self):
+        from tools.judgment_tools import get_judgment_pdf
+        # Ensure env var is not set for this call
+        prev = os.environ.pop("MCP_TW_JUDGMENT_DOWNLOAD_DIR", None)
+        try:
+            result = get_judgment_pdf(judgment_id=self.KNOWN_ID)
+        finally:
+            if prev is not None:
+                os.environ["MCP_TW_JUDGMENT_DOWNLOAD_DIR"] = prev
+
+        self.assertEqual(result["judgment_id"], self.KNOWN_ID)
+        self.assertTrue(result["url"].endswith(".pdf"))
+        self.assertNotIn("path", result)
+        self.assertNotIn("size_bytes", result)
+
+    @live
+    def test_downloads_to_tempdir(self):
+        import tempfile
+        from tools.judgment_tools import get_judgment_pdf
+
+        with tempfile.TemporaryDirectory() as tmp:
+            result = get_judgment_pdf(judgment_id=self.KNOWN_ID, save_to=tmp)
+            self.assertFalse(result["cached"])
+            self.assertGreater(result["size_bytes"], 1000)
+            self.assertTrue(os.path.isfile(result["path"]))
+            self.assertTrue(result["path"].endswith(".pdf"))
+
+    @live
+    def test_second_call_is_cached(self):
+        import tempfile
+        from tools.judgment_tools import get_judgment_pdf
+
+        with tempfile.TemporaryDirectory() as tmp:
+            first  = get_judgment_pdf(judgment_id=self.KNOWN_ID, save_to=tmp)
+            second = get_judgment_pdf(judgment_id=self.KNOWN_ID, save_to=tmp)
+
+            self.assertFalse(first["cached"])
+            self.assertTrue(second["cached"])
+            self.assertEqual(first["path"], second["path"])
+            self.assertEqual(first["size_bytes"], second["size_bytes"])
+
+
+class TestGetJudgmentParagraphs(unittest.TestCase):
+    """Verify get_judgment now returns the new `paragraphs` field end-to-end."""
+
+    KNOWN_ID = "IPCV,114,民著訴,52,20260415,1"
+
+    @live
+    def test_returns_paragraphs_list(self):
+        from tools.judgment_tools import get_judgment
+        result = get_judgment(judgment_id=self.KNOWN_ID)
+        self.assertIn("paragraphs", result)
+        self.assertIsInstance(result["paragraphs"], list)
+        self.assertGreater(len(result["paragraphs"]), 0)
+        first = result["paragraphs"][0]
+        for key in ("id", "section", "level", "heading", "text"):
+            self.assertIn(key, first)
 
 
 if __name__ == "__main__":
