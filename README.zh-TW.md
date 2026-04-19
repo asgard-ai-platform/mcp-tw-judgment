@@ -116,7 +116,25 @@ uv run mcp-tw-judgment
 
 | 變數 | 效果 |
 |---|---|
-| `MCP_TW_JUDGMENT_DOWNLOAD_DIR` | `get_judgment_pdf` 下載時的預設目錄。未設且未傳 `save_to` 參數時，`get_judgment_pdf` 只回傳 URL 不下載。 |
+| `MCP_TW_JUDGMENT_DOWNLOAD_DIR` | `get_judgment_pdf` 下載時的預設目錄（支援 `~` 展開）。未設且未傳 `save_to` 參數時，`get_judgment_pdf` 只回傳 URL 不下載。 |
+
+MCP server 是由 client（Claude Desktop、Claude Code、Cursor）啟動的，不是從你的 shell 啟動——所以在 `~/.zshrc`、`~/.bashrc` 裡 export 變數**不會**傳到 server。必須在 client 設定檔的 `env` 區塊設：
+
+```json
+{
+  "mcpServers": {
+    "tw-judgment": {
+      "command": "uvx",
+      "args": ["mcp-tw-judgment"],
+      "env": {
+        "MCP_TW_JUDGMENT_DOWNLOAD_DIR": "~/Downloads/tw-judgments"
+      }
+    }
+  }
+}
+```
+
+依你用的 client 把上面的 `env` 加到對應設定檔（`claude_desktop_config.json`、`.mcp.json` 或 `~/.cursor/mcp.json`）。改完後重啟 client 才會生效。
 
 ## 工具使用範例
 

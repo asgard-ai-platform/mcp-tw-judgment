@@ -116,7 +116,25 @@ Add to your project's `.mcp.json`:
 
 | Variable | Effect |
 |---|---|
-| `MCP_TW_JUDGMENT_DOWNLOAD_DIR` | Default directory for `get_judgment_pdf` downloads. If unset and the tool's `save_to` arg is `None`, `get_judgment_pdf` returns the URL without downloading. |
+| `MCP_TW_JUDGMENT_DOWNLOAD_DIR` | Default directory for `get_judgment_pdf` downloads. `~` is expanded. If unset and the tool's `save_to` arg is `None`, `get_judgment_pdf` returns the URL without downloading. |
+
+MCP servers are launched by the MCP client (Claude Desktop, Claude Code, Cursor), not by your shell — exporting a variable in `~/.zshrc` or `~/.bashrc` **will not** reach the server. Set variables in the client config's `env` block:
+
+```json
+{
+  "mcpServers": {
+    "tw-judgment": {
+      "command": "uvx",
+      "args": ["mcp-tw-judgment"],
+      "env": {
+        "MCP_TW_JUDGMENT_DOWNLOAD_DIR": "~/Downloads/tw-judgments"
+      }
+    }
+  }
+}
+```
+
+Apply this to whichever client config you use (`claude_desktop_config.json`, `.mcp.json`, or `~/.cursor/mcp.json`). Restart the client after editing.
 
 ## Example Tool Usage
 
