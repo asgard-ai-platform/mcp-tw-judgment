@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from parser.judgment_parser import (
     ParseError, extract_qid, parse_result_count, parse_result_list,
-    extract_pdf_url, parse_paragraphs,
+    extract_pdf_url, parse_paragraphs, parse_detail,
 )
 
 FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -144,6 +144,25 @@ class TestParseParagraphs(unittest.TestCase):
 
     def test_empty_body_returns_empty_list(self):
         self.assertEqual(parse_paragraphs("<html></html>"), [])
+
+
+class TestParseDetailBackwardCompat(unittest.TestCase):
+
+    def setUp(self):
+        self.result = parse_detail(load("detail_result.html"))
+
+    def test_original_fields_still_present(self):
+        for key in ("title", "date", "case_reason", "content"):
+            self.assertIn(key, self.result)
+
+    def test_content_is_nonempty_string(self):
+        self.assertIsInstance(self.result["content"], str)
+        self.assertGreater(len(self.result["content"]), 100)
+
+    def test_paragraphs_field_added(self):
+        self.assertIn("paragraphs", self.result)
+        self.assertIsInstance(self.result["paragraphs"], list)
+        self.assertGreater(len(self.result["paragraphs"]), 0)
 
 
 if __name__ == "__main__":

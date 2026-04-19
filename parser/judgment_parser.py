@@ -126,6 +126,8 @@ def parse_detail(detail_html: str) -> dict:
         - date: ruling date in ROC calendar (e.g. "民國 115 年 04 月 15 日")
         - case_reason: 裁判案由
         - content: full judgment text (newline-separated paragraphs)
+        - paragraphs: list of {id, section, level, heading, text} dicts
+          (see parse_paragraphs for details)
     """
     soup = BeautifulSoup(detail_html, "html.parser")
 
@@ -143,6 +145,7 @@ def parse_detail(detail_html: str) -> dict:
         "date":        date,
         "case_reason": case_reason,
         "content":     content,
+        "paragraphs":  parse_paragraphs(detail_html),
     }
 
 
