@@ -9,6 +9,8 @@ from urllib.parse import urlparse, parse_qs, unquote
 
 from bs4 import BeautifulSoup
 
+from config.settings import BASE_URL
+
 
 class ParseError(Exception):
     """Raised when expected content cannot be found in the HTML."""
@@ -142,6 +144,24 @@ def parse_detail(detail_html: str) -> dict:
         "case_reason": case_reason,
         "content":     content,
     }
+
+
+def extract_pdf_url(detail_html: str) -> str | None:
+    """Find the judgment's PDF download link in detail-page HTML.
+
+    The detail page carries an <a> pointing to /FILES/<court>/<id>.pdf.
+    We return it as an absolute URL on BASE_URL, or None if absent.
+
+    Args:
+        detail_html: Raw HTML of /FJUD/data.aspx response.
+
+    Returns:
+        Absolute URL string, or None if no PDF link found.
+    """
+    match = re.search(r'href="(/FILES/[^"]+\.pdf)"', detail_html, re.IGNORECASE)
+    if not match:
+        return None
+    return f"{BASE_URL}{match.group(1)}"
 
 
 # =============================================================================

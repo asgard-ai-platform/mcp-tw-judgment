@@ -13,7 +13,10 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from parser.judgment_parser import ParseError, extract_qid, parse_result_count, parse_result_list
+from parser.judgment_parser import (
+    ParseError, extract_qid, parse_result_count, parse_result_list,
+    extract_pdf_url,
+)
 
 FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
 
@@ -75,6 +78,21 @@ class TestParseResultList(unittest.TestCase):
 
     def test_empty_html_returns_empty_list(self):
         self.assertEqual(parse_result_list("<html></html>"), [])
+
+
+class TestExtractPdfUrl(unittest.TestCase):
+
+    def test_returns_absolute_url_from_fixture(self):
+        html = load("detail_result.html")
+        url = extract_pdf_url(html)
+        self.assertIsNotNone(url)
+        self.assertTrue(url.startswith("https://judgment.judicial.gov.tw/FILES/"),
+                        f"unexpected URL: {url}")
+        self.assertTrue(url.endswith(".pdf"))
+
+    def test_returns_none_when_no_pdf_link(self):
+        html = "<html><body><a href='other.aspx'>not a pdf</a></body></html>"
+        self.assertIsNone(extract_pdf_url(html))
 
 
 if __name__ == "__main__":
